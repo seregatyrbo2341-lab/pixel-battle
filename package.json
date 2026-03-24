@@ -1,18 +1,18 @@
 {
   "name": "pixel-battle",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Pixel Battle",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "postinstall": "npm rebuild sqlite3"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1",
-    "socket.io": "^4.8.3",
-    "sqlite3": "^6.0.1"
+    "express": "^4.18.2",
+    "socket.io": "^4.5.4",
+    "sqlite3": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0 <23.0.0"
   }
 }
