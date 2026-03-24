@@ -219,3 +219,96 @@ canvas {
         gap: 10px;
     }
 }
+
+/* Мобильная версия */
+@media (max-width: 700px) {
+    .container {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+    
+    .top-bar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+    
+    .stats-box {
+        gap: 12px;
+        font-size: 12px;
+    }
+    
+    .game-area {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .palette {
+        width: 100%;
+        order: 2;
+        padding: 10px;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+    }
+    
+    .color-swatch {
+        border-radius: 6px;
+    }
+    
+    .canvas-wrapper {
+        min-width: auto;
+        order: 1;
+        max-width: 100%;
+    }
+    
+    canvas {
+        width: 100%;
+        height: auto;
+    }
+    
+    .canvas-controls {
+        bottom: 8px;
+        right: 8px;
+    }
+    
+    .canvas-controls button {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .footer {
+        font-size: 10px;
+        padding: 8px;
+    }
+    
+    .footer p {
+        margin: 2px 0;
+    }
+    
+    #cooldown, #coordinates {
+        font-size: 11px;
+    }
+}
+
+/* Для совсем маленьких экранов */
+@media (max-width: 480px) {
+    .color-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .top-bar {
+        font-size: 11px;
+    }
+    
+    .custom-color-row {
+        justify-content: center;
+    }
+}

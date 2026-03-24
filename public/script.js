@@ -287,6 +287,151 @@ socket.on('connect', () => {
         maxY: GRID_SIZE - 1 
     });
 });
+// ========== ТЕЛЕФОН: СЕНСОРНОЕ УПРАВЛЕНИЕ ==========
+
+let touchStartX = 0, touchStartY = 0;
+let touchStartOffsetX = 0, touchStartOffsetY = 0;
+let isTouching = false;
+
+// Отключаем стандартные жесты на канвасе
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    
+    // Если одно касание - панорамирование
+    if (e.touches.length === 1) {
+        isTouching = true;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartOffsetX = offsetX;
+        touchStartOffsetY = offsetY;
+        canvas.style.cursor = 'grabbing';
+    }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    
+    if (isTouching && e.touches.length === 1) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const factor = canvas.width / rect.width;
+        
+        const dx = (touch.clientX - touchStartX) * factor;
+        const dy = (touch.clientY - touchStartY) * factor;
+        
+        offsetX = touchStartOffsetX + dx;
+        offsetY = touchStartOffsetY + dy;
+        
+        // Ограничиваем панорамирование
+        const maxOffsetX = (GRID_SIZE * scale) - VIEW_SIZE;
+        const minOffsetX = 0;
+        offsetX = Math.min(maxOffsetX, Math.max(minOffsetX, offsetX));
+        
+        const maxOffsetY = (GRID_SIZE * scale) - VIEW_SIZE;
+        const minOffsetY = 0;
+        offsetY = Math.min(maxOffsetY, Math.max(minOffsetY, offsetY));
+        
+        draw();
+    }
+});
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    isTouching = false;
+    canvas.style.cursor = 'crosshair';
+});
+
+// Обработка касания для установки пикселя
+canvas.addEventListener('touchstart', (e) => {
+    // Если касание одно и быстрое - ставим пиксель
+    if (e.touches.length === 1 && !isTouching) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        const screenX = (touch.clientX - rect.left) * scaleX;
+        const screenY = (touch.clientY - rect.top) * scaleY;
+        
+        const { x, y } = getPixelFromScreen(screenX, screenY);
+        
+        if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+            // Проверка кулдауна
+            if (cooldownTimer !== null) {
+                cooldownSpan.textContent = '⏳ Подожди!';
+                cooldownSpan.style.background = '#f8d7da';
+                return;
+            }
+            
+            cooldownSpan.textContent = '⏳ Отправка...';
+            
+            socket.emit('place_pixel', { x, y, color: currentColor }, (response) => {
+                if (response.success) {
+                    cooldownEndTime = Date.now() + 15000;
+                    updateCooldownDisplay();
+                    pixelCache.set(`${x},${y}`, currentColor);
+                    draw();
+                } else {
+                    cooldownSpan.textContent = `❌ ${response.error}`;
+                    setTimeout(() => {
+                        if (cooldownSpan.textContent.includes('❌')) {
+                            cooldownSpan.textContent = '✅ Готов';
+                        }
+                    }, 3000);
+                }
+            });
+        }
+    }
+});
+
+// Зум двумя пальцами (пинч)
+let initialPinchDistance = 0;
+let initialScale = 1;
+
+canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDistance = Math.hypot(dx, dy);
+        initialScale = scale;
+    }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDistance = Math.hypot(dx, dy);
+        
+        if (initialPinchDistance > 0) {
+            const newScale = initialScale * (currentDistance / initialPinchDistance);
+            scale = Math.min(20, Math.max(0.5, newScale));
+            
+            // Центрируем зум между пальцами
+            const rect = canvas.getBoundingClientRect();
+            const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+            const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            const factorX = canvas.width / rect.width;
+            const factorY = canvas.height / rect.height;
+            const mouseX = centerX * factorX;
+            const mouseY = centerY * factorY;
+            
+            const worldX = (mouseX - offsetX) / initialScale;
+            const worldY = (mouseY - offsetY) / initialScale;
+            
+            offsetX = mouseX - (worldX * scale);
+            offsetY = mouseY - (worldY * scale);
+            
+            draw();
+        }
+    }
+});
+
+
 
 // Запуск
 createPalette();
