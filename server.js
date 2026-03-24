@@ -2,12 +2,14 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static('public'));
+// Раздаем статические файлы
+app.use(express.static(path.join(__dirname, 'public')));
 
 const db = new sqlite3.Database('./database.sqlite');
 const GRID_SIZE = 500;
@@ -37,16 +39,13 @@ db.serialize(() => {
                 
                 if (row.count === 0) {
                     console.log(`📦 Заполняем поле ${GRID_SIZE}x${GRID_SIZE} белыми пикселями...`);
-                    console.log('⏳ Подождите 5-8 секунд...');
                     
                     db.run("BEGIN TRANSACTION");
                     const stmt = db.prepare("INSERT OR REPLACE INTO pixels (x, y, color, last_updated, user_id) VALUES (?, ?, '#FFFFFF', ?, 'system')");
                     
-                    let count = 0;
                     for (let x = 0; x < GRID_SIZE; x++) {
                         for (let y = 0; y < GRID_SIZE; y++) {
                             stmt.run(x, y, Date.now());
-                            count++;
                         }
                         if (x % 100 === 0) {
                             console.log(`   Прогресс: ${x}/${GRID_SIZE}`);
@@ -84,7 +83,6 @@ function getPixelRegion(minX, maxX, minY, maxY, callback) {
 function updatePixel(x, y, color, userId, callback) {
     const now = Date.now();
     
-    // Проверка глобального кулдауна
     if (userCooldowns.has(userId)) {
         const lastPlaceTime = userCooldowns.get(userId);
         const timePassed = now - lastPlaceTime;
@@ -104,7 +102,6 @@ function updatePixel(x, y, color, userId, callback) {
                 callback({ success: false, error: 'Ошибка сохранения' });
             } else {
                 userCooldowns.set(userId, now);
-                console.log(`✅ Пиксель (${x},${y}) установлен`);
                 callback({ success: true });
                 io.emit('pixel_update', { x, y, color });
                 
@@ -148,14 +145,25 @@ io.on('connection', (socket) => {
     });
 });
 
+// ========== ВАЖНО: правильный запуск сервера ==========
 const PORT = process.env.PORT || 10000;
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`
     ═══════════════════════════════════
     🎨 PIXEL BATTLE ЗАПУЩЕН!
-    🌐 http://localhost:${PORT}
+    🌐 Порт: ${PORT}
+    🌐 Адрес: http://0.0.0.0:${PORT}
     📐 Поле: ${GRID_SIZE}x${GRID_SIZE}
     ⏱️  Кулдаун: 15 секунд
     ═══════════════════════════════════
     `);
+});
+
+server.on('error', (error) => {
+    console.error('❌ Ошибка сервера:', error);
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Порт ${PORT} уже используется`);
+    }
+    process.exit(1);
 });
