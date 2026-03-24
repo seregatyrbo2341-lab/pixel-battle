@@ -7,7 +7,7 @@ const coordinatesSpan = document.getElementById('coordinates');
 const customColorPicker = document.getElementById('customColor');
 
 const GRID_SIZE = 500;
-const VIEW_SIZE = 600;
+const VIEW_SIZE = 500;  
 
 // Палитра цветов
 const PRESET_COLORS = [
