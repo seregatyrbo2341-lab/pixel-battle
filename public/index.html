@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pixel Battle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Pixel Battle</h1>
+        
+        <div class="top-bar">
+            <div class="cooldown-box">
+                <span id="cooldown">✅ Готов</span>
+            </div>
+            <div class="stats-box">
+                <span>👥 Онлайн: <span id="onlineCount">1</span></span>
+                <span id="coordinates">📍 X:- Y:-</span>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <!-- Палитра -->
+            <div class="palette">
+                <div class="palette-title">🎨 Цвета</div>
+                <div class="color-grid" id="colorPalette"></div>
+                <div class="custom-color-row">
+                    <input type="color" id="customColor" value="#FF0000">
+                    <span>Свой цвет</span>
+                </div>
+            </div>
+            
+            <!-- Холст -->
+            <div class="canvas-wrapper">
+                <canvas id="pixelCanvas" width="600" height="600"></canvas>
+                <div class="canvas-controls">
+                    <button id="resetView" title="Центрировать">🎯</button>
+                    <button id="zoomOut" title="Отдалить">−</button>
+                    <button id="zoomIn" title="Приблизить">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>🖱️ <strong>ЛКМ</strong> — поставить пиксель | 
+               🖱️ <strong>Правая кнопка</strong> — перемещение | 
+               🔍 <strong>Колесико</strong> — зум</p>
+            <p>⏱️ Кулдаун: <strong>15 секунд</strong> после каждой установки</p>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
